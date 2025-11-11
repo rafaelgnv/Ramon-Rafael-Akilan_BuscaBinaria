@@ -1,8 +1,9 @@
-# Arquivos de dados gerados
-*.txt
-
 # Binários C
 *.exe
 
 # Binários Java
 *.class
+
+# Arquivos de dados gerados
+*.csv
+*.txt

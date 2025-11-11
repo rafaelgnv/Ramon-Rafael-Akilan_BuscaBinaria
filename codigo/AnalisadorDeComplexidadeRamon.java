@@ -3,16 +3,17 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Scanner;
-import java.util.Locale; // Para formatar o CSV com "." em vez de ","
+import java.util.Locale;
+import java.util.Scanner; // Para formatar o CSV com "." em vez de ","
 
-public class AnalisadorDeComplexidade {
+public class AnalisadorDeComplexidadeRamon {
 
     // Quantidade de arquivos por pasta
     private static final int N_EXECUCOES = 50;
 
     /**
-     * Função de Busca Binária (sem alterações)
+     * Função de Busca Binária - Complexidade O(log n)
+     * Opera com um vetor de 'long'.
      */
     public static int buscaBinaria(long[] vetor, int tamanho, long elementoProcurado) {
         int inicio = 0;
@@ -50,19 +51,24 @@ public class AnalisadorDeComplexidade {
 
     /**
      * Função que executa UMA busca e retorna o tempo em nanosegundos
+     * (Esta função contém a correção do Scanner)
      */
     public static long analisarArquivoUnico(String nomeArquivo, int tamanho) {
         long[] vetor = new long[tamanho];
         
+        // Correção de leitura: Lendo a linha inteira e usando split()
         try (Scanner scanner = new Scanner(new File(nomeArquivo))) {
             if (!scanner.hasNextLine()) {
                 System.err.println("Erro: Arquivo " + nomeArquivo + " está vazio.");
                 return -1;
             }
+            // 1. Lê a linha inteira
             String linhaInteira = scanner.nextLine();
+            // 2. Quebra a linha na vírgula
             String[] numerosEmString = linhaInteira.split(",");
 
             int i = 0;
+            // 3. Converte as strings para long
             for (String s : numerosEmString) {
                 if (i >= tamanho) break;
                 vetor[i++] = Long.parseLong(s.trim()); 
@@ -93,8 +99,9 @@ public class AnalisadorDeComplexidade {
         int incremento = 10000;
         int limiteMax = 100000;
 
-        // --- CAMINHO DO NOVO ARQUIVO DE RESULTADOS ---
+        // --- CORREÇÃO DE CAMINHO ---
         // (Assumindo que o .class está em 'codigo/java/')
+        // O caminho sobe UM nível ("../") para a pasta raiz do projeto.
         String arquivoResultadoJava = "../resultados/estatisticas/resultados_Java.csv";
 
         // Usamos try-with-resources para garantir que o PrintWriter feche
@@ -108,14 +115,16 @@ public class AnalisadorDeComplexidade {
             for (int tamanho = incremento; tamanho <= limiteMax; tamanho += incremento) {
                 
                 String nomeSubpasta = String.format("n%06d", tamanho);
-                System.out.printf("\nProcessando pasta: ../../dados/%s/ (Tamanho: %d)\n", nomeSubpasta, tamanho);
+                System.out.printf("\nProcessando pasta: ../dados/%s/ (Tamanho: %d)\n", nomeSubpasta, tamanho);
                 
                 long[] temposNs = new long[N_EXECUCOES];
 
                 // LOOP INTERNO (Para os 50 arquivos)
                 for (int i = 0; i < N_EXECUCOES; i++) {
                     String nomeArquivoDados = String.format("arquivo_%02d.csv", i + 1);
-                    // Monta o caminho (assumindo que estamos em 'codigo/java/')
+                    
+                    // --- CORREÇÃO DE CAMINHO ---
+                    // O caminho sobe UM nível ("../") para a pasta raiz do projeto.
                     String caminhoCompletoDados = String.format("../dados/%s/%s", nomeSubpasta, nomeArquivoDados);
 
                     System.out.printf("  -> Analisando %s ... ", nomeArquivoDados);
@@ -150,7 +159,7 @@ public class AnalisadorDeComplexidade {
             
         } catch (IOException e) {
             System.err.println("Erro ao escrever o arquivo de resultado: " + e.getMessage());
-            System.err.println("Verifique se as pastas 'resultados' e 'estatisticas' existem.");
+            System.err.println("Verifique se as pastas '../resultados/estatisticas' existem.");
         }
         
         System.out.println("\nAnálise (Java) concluída com sucesso.");
