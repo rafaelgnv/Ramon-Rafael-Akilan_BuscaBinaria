@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>   // Para clock_gettime
+#include <time.h>   // Para clock_gettime E time()
 #include <math.h>   // Para sqrt() e pow()
 #include <string.h> // Para strcpy, strcat, etc. (apesar de usarmos sprintf)
 
@@ -71,6 +71,7 @@ long long analisar_arquivo_unico(const char* nome_arquivo, int tamanho) {
     while (i < tamanho && fscanf(arquivo, "%lld", &vetor[i]) == 1) {
         i++;
         char separador = fgetc(arquivo);
+        // Tratamento simples para a vírgula
         if (separador == '\n' || separador == EOF) break; 
     }
     fclose(arquivo);
@@ -79,9 +80,23 @@ long long analisar_arquivo_unico(const char* nome_arquivo, int tamanho) {
         fprintf(stderr, "Aviso: Arquivo %s parece ter %d elementos, mas esperava %d.\n", nome_arquivo, i, tamanho);
     }
 
-    // 3. Definir o elemento para buscar (O PIOR CASO: 0)
-    // Sabemos que 0 não existe, pois o gerador só cria números positivos.
-    long long elemento_para_buscar = 0;
+    // --- LÓGICA DE BUSCA 70/30 (MODIFICADO) ---
+    long long elemento_para_buscar;
+    
+    // Gera um float entre 0.0 e 1.0
+    double prob = (double)rand() / RAND_MAX; 
+    
+    if (prob <= 0.7) {
+        // 70% SUCESSO: Pega um índice aleatório
+        // rand() % tamanho gera um número de 0 até (tamanho-1)
+        int indice_aleatorio = rand() % tamanho;
+        elemento_para_buscar = vetor[indice_aleatorio];
+    } else {
+        // 30% FALHA: Pega o 0 (que sabemos que não existe)
+        elemento_para_buscar = 0;
+    }
+    // --- FIM DA MODIFICAÇÃO ---
+
 
     // 4. Medir o tempo de execução
     struct timespec inicio_t, fim_t;
@@ -99,12 +114,16 @@ long long analisar_arquivo_unico(const char* nome_arquivo, int tamanho) {
 }
 
 int main() {
+    // --- ADICIONADO: Inicializa o gerador de números aleatórios ---
+    // Deve ser chamado apenas UMA VEZ
+    srand(time(NULL)); 
+    
     int incremento = 10000;
     int limite_max = 100000;
     
     // --- CAMINHO DO NOVO ARQUIVO DE RESULTADOS ---
-    // (Assumindo que o executável está em 'codigo/c/')
-    const char* arquivo_resultado_c = "../resultados/estatisticas/resultados_C.csv";
+    // (Nome do arquivo alterado)
+    const char* arquivo_resultado_c = "../resultados/estatisticas/resultados_C_CasoMedio.csv";
     
     FILE* f_resultados = fopen(arquivo_resultado_c, "w");
     if (f_resultados == NULL) {
@@ -115,7 +134,7 @@ int main() {
     
     // Escreve o cabeçalho do CSV de resultados
     fprintf(f_resultados, "n,tempo_ms,desvio\n");
-    printf("Iniciando análise (C). Salvando resultados em %s\n", arquivo_resultado_c);
+    printf("Iniciando análise (C - Caso Médio). Salvando resultados em %s\n", arquivo_resultado_c);
 
     // Buffers para os nomes de pastas e arquivos
     char nome_subpasta[20];
@@ -126,7 +145,7 @@ int main() {
     for (int tamanho = incremento; tamanho <= limite_max; tamanho += incremento) {
         
         sprintf(nome_subpasta, "n%06d", tamanho);
-        printf("\nProcessando pasta: ../../dados/%s/ (Tamanho: %d)\n", nome_subpasta, tamanho);
+        printf("\nProcessando pasta: ../dados/%s/ (Tamanho: %d)\n", nome_subpasta, tamanho);
         
         // Array para guardar os 50 tempos de cada lote
         long long tempos_ns[N_EXECUCOES];
@@ -171,6 +190,6 @@ int main() {
     }
     
     fclose(f_resultados);
-    printf("\nAnálise (C) concluída com sucesso.\n");
+    printf("\nAnálise (C - Caso Médio) concluída com sucesso.\n");
     return 0;
 }

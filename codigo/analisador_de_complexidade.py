@@ -2,6 +2,7 @@ import time
 import sys
 from pathlib import Path
 import statistics # Para calcular média e desvio padrão
+import random     # <--- ADICIONADO
 
 # Quantidade de arquivos por pasta
 N_EXECUCOES = 50
@@ -34,6 +35,7 @@ def analisar_arquivo_unico(caminho_completo_dados, tamanho):
     """
     Função que executa UMA busca e retorna o tempo em nanosegundos
     """
+    vetor = [] # Inicializa como lista vazia
     try:
         with open(caminho_completo_dados, 'r') as f:
             linha_inteira = f.readline().strip()
@@ -42,7 +44,12 @@ def analisar_arquivo_unico(caminho_completo_dados, tamanho):
                 return -1
 
             numeros_em_string = linha_inteira.split(',')
+            # Corrigido: Garantir que o vetor tenha o tamanho esperado (embora o split já deva fazer isso)
             vetor = [int(s) for s in numeros_em_string]
+            
+            if len(vetor) != tamanho:
+                 print(f"Aviso: Arquivo {caminho_completo_dados.name} tem {len(vetor)} elementos, esperado {tamanho}.", file=sys.stderr)
+
 
     except FileNotFoundError:
         print(f"Erro ao abrir o arquivo: {caminho_completo_dados}.", file=sys.stderr)
@@ -50,9 +57,21 @@ def analisar_arquivo_unico(caminho_completo_dados, tamanho):
     except Exception as e:
         print(f"Erro ao processar {caminho_completo_dados.name}: {e}", file=sys.stderr)
         return -1
+        
+    if not vetor: # Checagem extra
+        print(f"Erro: Vetor ficou vazio para {caminho_completo_dados.name}", file=sys.stderr)
+        return -1
 
-    # 3. Definir o elemento para buscar (O PIOR CASO: 0)
-    elemento_para_buscar = 0
+    # --- LÓGICA DE BUSCA 70/30 (MODIFICADO) ---
+    if random.random() <= 0.7:
+        # 70% SUCESSO: Pega um índice aleatório
+        # Usamos 'tamanho - 1' porque o índice é 0-based
+        indice_aleatorio = random.randint(0, tamanho - 1)
+        elemento_para_buscar = vetor[indice_aleatorio]
+    else:
+        # 30% FALHA: Pega o 0 (que sabemos que não existe)
+        elemento_para_buscar = 0
+    # --- FIM DA MODIFICAÇÃO ---
 
     # 4. Medir o tempo de execução
     inicio_t = time.perf_counter_ns()
@@ -70,7 +89,7 @@ if __name__ == "__main__":
     limite_max = 100000
 
     # --- CAMINHO DO NOVO ARQUIVO DE RESULTADOS ---
-    arquivo_resultado_py = PASTA_RESULTADOS / "resultados_Python.csv"
+    arquivo_resultado_py = PASTA_RESULTADOS / "resultados_Python_CasoMedio.csv" # Nome do arquivo alterado
 
     try:
         # Abre o arquivo de resultados para escrita
@@ -78,7 +97,7 @@ if __name__ == "__main__":
             
             # (Não precisamos de um 'writer' CSV, pois o formato é simples)
             f_resultados.write("n,tempo_ms,desvio\n")
-            print(f"Iniciando análise (Python). Salvando resultados em {arquivo_resultado_py}")
+            print(f"Iniciando análise (Python - Caso Médio). Salvando resultados em {arquivo_resultado_py}")
 
             # LOOP EXTERNO (Para os tamanhos / pastas)
             for tamanho in range(incremento, limite_max + incremento, incremento):
@@ -96,6 +115,7 @@ if __name__ == "__main__":
 
                     print(f"  -> Analisando {nome_arquivo_dados} ... ", end="")
                     
+                    # Passamos o 'tamanho' para a função
                     tempo = analisar_arquivo_unico(caminho_completo_dados, tamanho)
                     
                     if tempo >= 0:
@@ -135,4 +155,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Ocorreu um erro inesperado: {e}", file=sys.stderr)
     
-    print("\nAnálise (Python) concluída com sucesso.")
+    print("\nAnálise (Python - Caso Médio) concluída com sucesso.")

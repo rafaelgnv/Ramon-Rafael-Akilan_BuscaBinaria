@@ -3,13 +3,18 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Locale;
 import java.util.Scanner;
-import java.util.Locale; // Para formatar o CSV com "." em vez de ","
+import java.util.Random; 
 
+// AQUI ESTÁ A CORREÇÃO: O nome da classe agora é o mesmo do arquivo
 public class AnalisadorDeComplexidadeRafael {
 
     // Quantidade de arquivos por pasta
     private static final int N_EXECUCOES = 50;
+    
+    // Instância única de Random (para eficiência e aleatoriedade adequada)
+    private static final Random RND = new Random(); 
 
     /**
      * Função de Busca Binária - Complexidade O(log n)
@@ -73,6 +78,11 @@ public class AnalisadorDeComplexidadeRafael {
                 if (i >= tamanho) break;
                 vetor[i++] = Long.parseLong(s.trim()); 
             }
+            
+            if (i != tamanho) {
+                 System.err.printf("Aviso: Arquivo %s parece ter %d elementos, mas esperava %d.\n", nomeArquivo, i, tamanho);
+            }
+            
         } catch (FileNotFoundException e) {
             System.err.println("Erro ao abrir o arquivo: " + nomeArquivo);
             return -1; 
@@ -81,8 +91,19 @@ public class AnalisadorDeComplexidadeRafael {
             return -1;
         }
         
-        // 3. Definir o elemento para buscar (O PIOR CASO: 0)
-        long elementoParaBuscar = 0;
+        // --- LÓGICA DE BUSCA 70/30 (MODIFICADO) ---
+        long elementoParaBuscar;
+        
+        if (RND.nextDouble() <= 0.7) {
+            // 70% SUCESSO: Pega um índice aleatório
+            // RND.nextInt(tamanho) gera um número de 0 até (tamanho-1)
+            int indiceAleatorio = RND.nextInt(tamanho);
+            elementoParaBuscar = vetor[indiceAleatorio];
+        } else {
+            // 30% FALHA: Pega o 0 (que sabemos que não existe)
+            elementoParaBuscar = 0;
+        }
+        // --- FIM DA MODIFICAÇÃO ---
 
         // 4. Medir o tempo de execução
         long inicioT = System.nanoTime();
@@ -102,14 +123,15 @@ public class AnalisadorDeComplexidadeRafael {
         // --- CORREÇÃO DE CAMINHO ---
         // (Assumindo que o .class está em 'codigo/java/')
         // O caminho sobe UM nível ("../") para a pasta raiz do projeto.
-        String arquivoResultadoJava = "../resultados/estatisticas/resultados_Java.csv";
+        // Nome do arquivo alterado
+        String arquivoResultadoJava = "../resultados/estatisticas/resultados_Java_CasoMedio.csv";
 
         // Usamos try-with-resources para garantir que o PrintWriter feche
         // Usamos Locale.US para garantir que o separador decimal seja "."
         try (PrintWriter pw = new PrintWriter(new FileWriter(arquivoResultadoJava))) {
             
             pw.println("n,tempo_ms,desvio");
-            System.out.println("Iniciando análise (Java). Salvando resultados em " + arquivoResultadoJava);
+            System.out.println("Iniciando análise (Java - Caso Médio). Salvando resultados em " + arquivoResultadoJava);
 
             // LOOP EXTERNO (Para os tamanhos / pastas)
             for (int tamanho = incremento; tamanho <= limiteMax; tamanho += incremento) {
@@ -162,6 +184,6 @@ public class AnalisadorDeComplexidadeRafael {
             System.err.println("Verifique se as pastas '../resultados/estatisticas' existem.");
         }
         
-        System.out.println("\nAnálise (Java) concluída com sucesso.");
+        System.out.println("\nAnálise (Java - Caso Médio) concluída com sucesso.");
     }
 }
