@@ -7,19 +7,16 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.Random; 
 
-// AQUI ESTÁ A CORREÇÃO: O nome da classe agora é o mesmo do arquivo
+
 public class AnalisadorDeComplexidadeRafael {
 
-    // Quantidade de arquivos por pasta
+    
     private static final int N_EXECUCOES = 50;
     
-    // Instância única de Random (para eficiência e aleatoriedade adequada)
+    
     private static final Random RND = new Random(); 
 
-    /**
-     * Função de Busca Binária - Complexidade O(log n)
-     * Opera com um vetor de 'long'.
-     */
+    
     public static int buscaBinaria(long[] vetor, int tamanho, long elementoProcurado) {
         int inicio = 0;
         int fim = tamanho - 1; 
@@ -29,12 +26,10 @@ public class AnalisadorDeComplexidadeRafael {
             if (vetor[meio] < elementoProcurado) inicio = meio + 1;
             else fim = meio - 1;
         }
-        return -1; // Não encontrado
+        return -1; 
     }
     
-    /**
-     * Função auxiliar para calcular a Média
-     */
+    
     public static double calcularMedia(long[] temposNs) {
         long soma = 0;
         for (long tempo : temposNs) {
@@ -43,9 +38,7 @@ public class AnalisadorDeComplexidadeRafael {
         return (double)soma / temposNs.length;
     }
 
-    /**
-     * Função auxiliar para calcular o Desvio Padrão
-     */
+    
     public static double calcularDesvioPadrao(long[] temposNs, double media) {
         double somaDiferencasQuadradas = 0;
         for (long tempo : temposNs) {
@@ -54,26 +47,23 @@ public class AnalisadorDeComplexidadeRafael {
         return Math.sqrt(somaDiferencasQuadradas / temposNs.length);
     }
 
-    /**
-     * Função que executa UMA busca e retorna o tempo em nanosegundos
-     * (Esta função contém a correção do Scanner)
-     */
+    
     public static long analisarArquivoUnico(String nomeArquivo, int tamanho) {
         long[] vetor = new long[tamanho];
         
-        // Correção de leitura: Lendo a linha inteira e usando split()
+        
         try (Scanner scanner = new Scanner(new File(nomeArquivo))) {
             if (!scanner.hasNextLine()) {
                 System.err.println("Erro: Arquivo " + nomeArquivo + " está vazio.");
                 return -1;
             }
-            // 1. Lê a linha inteira
+            
             String linhaInteira = scanner.nextLine();
-            // 2. Quebra a linha na vírgula
+            
             String[] numerosEmString = linhaInteira.split(",");
 
             int i = 0;
-            // 3. Converte as strings para long
+            
             for (String s : numerosEmString) {
                 if (i >= tamanho) break;
                 vetor[i++] = Long.parseLong(s.trim()); 
@@ -91,28 +81,27 @@ public class AnalisadorDeComplexidadeRafael {
             return -1;
         }
         
-        // --- LÓGICA DE BUSCA 70/30 (MODIFICADO) ---
+        
         long elementoParaBuscar;
         
         if (RND.nextDouble() <= 0.7) {
-            // 70% SUCESSO: Pega um índice aleatório
-            // RND.nextInt(tamanho) gera um número de 0 até (tamanho-1)
+            
             int indiceAleatorio = RND.nextInt(tamanho);
             elementoParaBuscar = vetor[indiceAleatorio];
         } else {
-            // 30% FALHA: Pega o 0 (que sabemos que não existe)
+            
             elementoParaBuscar = 0;
         }
-        // --- FIM DA MODIFICAÇÃO ---
+        
 
-        // 4. Medir o tempo de execução
+        
         long inicioT = System.nanoTime();
         
-        buscaBinaria(vetor, tamanho, elementoParaBuscar); // A busca é executada
+        buscaBinaria(vetor, tamanho, elementoParaBuscar); 
         
         long fimT = System.nanoTime();
 
-        // 6. Retornar o tempo em nanosegundos
+        
         return fimT - inicioT;
     }
 
@@ -120,20 +109,16 @@ public class AnalisadorDeComplexidadeRafael {
         int incremento = 10000;
         int limiteMax = 100000;
 
-        // --- CORREÇÃO DE CAMINHO ---
-        // (Assumindo que o .class está em 'codigo/java/')
-        // O caminho sobe UM nível ("../") para a pasta raiz do projeto.
-        // Nome do arquivo alterado
+        
         String arquivoResultadoJava = "../resultados/estatisticas/resultados_Java_CasoMedio.csv";
 
-        // Usamos try-with-resources para garantir que o PrintWriter feche
-        // Usamos Locale.US para garantir que o separador decimal seja "."
+        
         try (PrintWriter pw = new PrintWriter(new FileWriter(arquivoResultadoJava))) {
             
             pw.println("n,tempo_ms,desvio");
             System.out.println("Iniciando análise (Java - Caso Médio). Salvando resultados em " + arquivoResultadoJava);
 
-            // LOOP EXTERNO (Para os tamanhos / pastas)
+            
             for (int tamanho = incremento; tamanho <= limiteMax; tamanho += incremento) {
                 
                 String nomeSubpasta = String.format("n%06d", tamanho);
@@ -141,12 +126,11 @@ public class AnalisadorDeComplexidadeRafael {
                 
                 long[] temposNs = new long[N_EXECUCOES];
 
-                // LOOP INTERNO (Para os 50 arquivos)
+                
                 for (int i = 0; i < N_EXECUCOES; i++) {
                     String nomeArquivoDados = String.format("arquivo_%02d.csv", i + 1);
                     
-                    // --- CORREÇÃO DE CAMINHO ---
-                    // O caminho sobe UM nível ("../") para a pasta raiz do projeto.
+                    
                     String caminhoCompletoDados = String.format("../dados/%s/%s", nomeSubpasta, nomeArquivoDados);
 
                     System.out.printf("  -> Analisando %s ... ", nomeArquivoDados);
@@ -157,25 +141,25 @@ public class AnalisadorDeComplexidadeRafael {
                         temposNs[i] = tempo;
                         System.out.printf("Tempo: %d ns\n", tempo);
                     } else {
-                        temposNs[i] = 0; // Marca como falha
+                        temposNs[i] = 0; 
                         System.out.println("Falha na leitura.");
                     }
                 }
 
-                // --- CÁLCULO ESTATÍSTICO ---
+                
                 double mediaNs = calcularMedia(temposNs);
                 double desvioNs = calcularDesvioPadrao(temposNs, mediaNs);
                 
-                // --- CONVERSÃO PARA MILISSEGUNDOS (ms) ---
+                
                 double mediaMs = mediaNs / 1_000_000.0;
                 double desvioMs = desvioNs / 1_000_000.0;
 
                 System.out.println("--------------------------------------------------");
-                // Usamos Locale.US para garantir o "." como separador
+                
                 System.out.printf(Locale.US, "Tamanho %d: Média: %.6f ms | Desvio: %.6f ms\n", tamanho, mediaMs, desvioMs);
                 System.out.println("--------------------------------------------------");
 
-                // Salva a linha de resultado no CSV
+                
                 pw.printf(Locale.US, "%d,%.8f,%.8f\n", tamanho, mediaMs, desvioMs);
             }
             
